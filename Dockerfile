@@ -1,49 +1,44 @@
-# Etapa 1: Construir los assets con Node
-FROM node:18 AS build-frontend
+FROM php:8.2-cli
 
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-
-# Etapa 2: Contenedor PHP + Apache
-FROM php:8.2-apache
-
-# Extensiones necesarias para Laravel
+# Extensiones necesarias
 RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libxml2-dev zip unzip git \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# Corregir conflicto de MPM en Apache
-RUN a2dismod mpm_event || true && a2enmod mpm_prefork || true
-
-# Habilitar mod_rewrite
-RUN a2enmod rewrite
-
-# Carpeta de trabajo
-WORKDIR /var/www/html
-
-# Copiar todo el proyecto
-COPY . /var/www/html
-
-# Copiar los assets construidos
-COPY --from=build-frontend /app/public/build /var/www/html/public/build
+    libpng-dev libonig-dev libxml2-dev \
+    zip unzip git curl nginx \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
+    && apt-get clean
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Instalar Node
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+WORKDIR /var/www/html
+
+COPY . .
+
+# Instalar dependencias
 RUN composer install --no-dev --optimize-autoloader
+RUN npm install && npm run build
 
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Apache apunta a /public
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+# Configurar Nginx
+RUN echo 'server { \
+    listen 80; \
+    root /var/www/html/public; \
+    index index.php; \
+    location / { try_files $uri $uri/ /index.php?$query_string; } \
+    location ~ \.php$ { \
+        fastcgi_pass 127.0.0.1:9000; \
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name; \
+        include fastcgi_params; \
+    } \
+}' > /etc/nginx/sites-available/default
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD php-fpm -D && nginx -g "daemon off;"
