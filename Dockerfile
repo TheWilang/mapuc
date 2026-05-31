@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libonig-dev libxml2-dev zip unzip git \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# Corregir conflicto de MPM en Apache
+RUN a2dismod mpm_event || true && a2enmod mpm_prefork || true
+
 # Habilitar mod_rewrite
 RUN a2enmod rewrite
 
@@ -44,5 +47,3 @@ RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available
 EXPOSE 80
 
 CMD ["apache2-foreground"]
-
-
