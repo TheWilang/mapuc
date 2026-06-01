@@ -1,4 +1,4 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
 # Extensiones necesarias
 RUN apt-get update && apt-get install -y \
@@ -18,27 +18,28 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Instalar dependencias
 RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
-# Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Configurar Nginx
 RUN echo 'server { \
     listen 80; \
     root /var/www/html/public; \
     index index.php; \
     location / { try_files $uri $uri/ /index.php?$query_string; } \
     location ~ \.php$ { \
-        fastcgi_pass 127.0.0.1:9000; \
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock; \
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name; \
         include fastcgi_params; \
     } \
 }' > /etc/nginx/sites-available/default
 
+# Script de inicio
+RUN echo '#!/bin/bash\n/usr/local/sbin/php-fpm --daemonize\nnginx -g "daemon off;"' > /start.sh \
+    && chmod +x /start.sh
+
 EXPOSE 80
 
-CMD php-fpm -D && nginx -g "daemon off;"
+CMD ["/bin/bash", "/start.sh"]
