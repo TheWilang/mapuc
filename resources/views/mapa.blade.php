@@ -12,219 +12,282 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-        /* ===== SIDEBAR ===== */
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+        width: 370px;
+        min-width: 370px;
+        height: 100vh;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+        z-index: 1000;
+        transition: transform 0.3s ease;
+    }
+
+    #sidebar-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #fff;
+    }
+
+    #logo-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    #logo-link img {
+        height: 52px;
+        width: auto;
+    }
+
+    #search-input {
+        width: 100%;
+        padding: 9px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    #search-input:focus { border-color: #16a34a; }
+
+    #ubicaciones-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    #ubicaciones-list::-webkit-scrollbar { width: 5px; }
+    #ubicaciones-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+    .ubicacion-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.15s;
+    }
+
+    .ubicacion-card:hover { background: #f9fafb; }
+    .ubicacion-card.active { background: #f0fdf4; border-left: 4px solid #16a34a; }
+
+    .ubicacion-card img {
+        width: 72px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 6px;
+        flex-shrink: 0;
+        background: #e5e7eb;
+    }
+
+    .ubicacion-info { flex: 1; min-width: 0; }
+
+    .ubicacion-info h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ubicacion-info p {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 7px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .btn-ruta {
+        display: inline-block;
+        padding: 5px 14px;
+        background: #16a34a;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-ruta:hover { background: #15803d; }
+
+    #no-results {
+        display: none;
+        padding: 20px 16px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 14px;
+    }
+
+    /* ===== LOGOUT ===== */
+    #logout-section {
+        padding: 12px 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    #logout-form button {
+        width: 100%;
+        padding: 11px;
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    #logout-form button:hover { background: #b91c1c; }
+
+    /* ===== MAPA ===== */
+    #map {
+        flex: 1;
+        height: 100vh;
+        z-index: 1;
+    }
+
+    .leaflet-routing-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 13px;
+    }
+
+    .custom-popup h4 {
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #111827;
+    }
+
+    .custom-popup p {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+
+    .custom-popup img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    .popup-btn-ruta {
+        display: block;
+        width: 100%;
+        padding: 6px;
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .popup-btn-ruta:hover { background: #15803d; }
+
+    /* ===== BOTÓN FLOTANTE MÓVIL ===== */
+    #btn-toggle-panel {
+        display: none;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 14px 28px;
+        font-size: 15px;
+        font-weight: 700;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        cursor: pointer;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* ===== OVERLAY MÓVIL ===== */
+    #overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 999;
+    }
+
+    /* ===== RESPONSIVE MÓVIL ===== */
+    @media (max-width: 768px) {
+        body { flex-direction: column; }
+
         #sidebar {
-            width: 370px;
-            min-width: 370px;
-            height: 100vh;
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-            z-index: 1000;
-        }
-
-        #sidebar-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #fff;
-        }
-
-        #logo-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        #logo-link img {
-            height: 52px;
-            width: auto;
-        }
-
-        #search-input {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 9px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
+            height: 85vh;
+            transform: translateY(100%);
+            z-index: 1500;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
         }
 
-        #search-input:focus {
-            border-color: #16a34a;
+        #sidebar.open {
+            transform: translateY(15%);
         }
 
-        #ubicaciones-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-
-        #ubicaciones-list::-webkit-scrollbar { width: 5px; }
-        #ubicaciones-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-
-        .ubicacion-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f3f4f6;
-            transition: background 0.15s;
-        }
-
-        .ubicacion-card:hover { background: #f9fafb; }
-        .ubicacion-card.active { background: #f0fdf4; border-left: 4px solid #16a34a; }
-
-        .ubicacion-card img {
-            width: 72px;
-            height: 56px;
-            object-fit: cover;
-            border-radius: 6px;
-            flex-shrink: 0;
-            background: #e5e7eb;
-        }
-
-        .ubicacion-info { flex: 1; min-width: 0; }
-
-        .ubicacion-info h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .ubicacion-info p {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 7px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .btn-ruta {
-            display: inline-block;
-            padding: 5px 14px;
-            background: #16a34a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-ruta:hover { background: #15803d; }
-
-        /* Mensaje sin resultados */
-        #no-results {
-            display: none;
-            padding: 20px 16px;
-            text-align: center;
-            color: #9ca3af;
-            font-size: 14px;
-        }
-
-        /* ===== BOTÓN CERRAR SESIÓN ===== */
-        #logout-section {
-            padding: 12px 16px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        #logout-form button {
-            width: 100%;
-            padding: 11px;
-            background: #dc2626;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-
-        #logout-form button:hover { background: #b91c1c; }
-
-        /* ===== MAPA ===== */
         #map {
-            flex: 1;
+            width: 100vw;
             height: 100vh;
-            z-index: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
 
-        /* Panel de instrucciones de ruta */
-        .leaflet-routing-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            max-height: 300px;
-            overflow-y: auto;
-            font-size: 13px;
+        #btn-toggle-panel {
+            display: flex;
         }
 
-        /* Popup personalizado */
-        .custom-popup h4 {
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 4px;
-            color: #111827;
-        }
-
-        .custom-popup p {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .custom-popup img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .popup-btn-ruta {
+        #overlay.active {
             display: block;
-            width: 100%;
-            padding: 6px;
-            background: #16a34a;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
         }
-
-        .popup-btn-ruta:hover { background: #15803d; }
-    </style>
+    }
+</style>
 </head>
 <body>
 
@@ -287,6 +350,14 @@
 
 <!-- ===== MAPA ===== -->
 <div id="map"></div>
+
+<!-- Botón flotante móvil -->
+<button id="btn-toggle-panel" onclick="togglePanel()">
+    ☰ &nbsp; Ver bloques
+</button>
+
+<!-- Overlay -->
+<div id="overlay" onclick="togglePanel()"></div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -478,6 +549,17 @@ map.on('click', function(e) {
 
         document.getElementById('no-results').style.display = visibles === 0 ? 'block' : 'none';
     });
+// ===== TOGGLE PANEL MÓVIL =====
+function togglePanel() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const btn = document.getElementById('btn-toggle-panel');
+
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+    btn.textContent = sidebar.classList.contains('open') ? '✕  Cerrar' : '☰  Ver bloques';
+}
+
 </script>
 </body>
 </html>
