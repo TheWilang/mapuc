@@ -21,6 +21,6 @@ RUN npm install && npm run build
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
+EXPOSE 8080
 
-CMD ["php", "-S", "0.0.0.0:80", "-t", "public"]
+CMD php -S 0.0.0.0:8080 -t public public/index.php
